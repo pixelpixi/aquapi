@@ -65,35 +65,39 @@ class TemperatureThread(threading.Thread) :
         lines = f.readlines()
         f.close()
 
+        print lines
         while lines[0].strip()[-3:] != 'YES':
-            time.sleep(0.2)
-            lines = read_temp_raw()
+            print 'Error reading temperature: ', lines
+            return
+
         equals_pos = lines[1].find('t=')
         if equals_pos != -1:
             temp_string = lines[1][equals_pos+2:]
             self.tempC = float(temp_string) / 1000.0
             self.tempF = self.tempC * 9.0 / 5.0 + 32.0
-            print 'Temp:', self.tempF
+
 
 
 class Temperature(Device) :
     def Init(self) :
         self.CreateVariable('Temperature', self.Input, self.Float, 78.0)
 
-        base_dir = '/sys/bus/w1/devices/'
-        device_folder = glob.glob(base_dir + '28*')[0]
-        self.deviceFile = device_folder + '/w1_slave'
-        self._StartThread()
-
-
-    def _StartThread(self) :
-        self.thread = TemperatureThread(self.deviceFile)
-        self.thread.start()
+        self._deviceFile = deviceFolder = glob.glob('/sys/bus/w1/devices/28*/w1_slave')[0]
+        self._lastRead = 0
+        self._readInterval = 5
+        self._thread = None
 
     def Update(self) :
-        if (not self.thread.isAlive()) :
-            self.Set('Temperature', self.thread.tempF)
-            self._StartThread()
+        if (self._thread is not None and self._thread.isAlive()) :
+            return
+
+        if (self._thread and (self._thread.tempF is not None)) :
+            self.Set('Temperature', self._thread.tempF)
+
+        if (time.time() > self._lastRead+self._readInterval) :
+            self._lastRead = time.time()
+            self._thread = TemperatureThread(self._deviceFile)
+            self._thread.start()
 
 
 class RelayBox(Device) :
@@ -142,6 +146,8 @@ class GPIORelayBox(Device) :
 class VirtualDevice(Device) :
 
     def Init(self) :
+        self.CreateVariable('Incrementing', self.Option, self.Bool, False)
+
         self.CreateVariable('BoolOutput', self.Output, self.Bool, False)
         self.CreateVariable('IntOutput', self.Output, self.Int, 0)
         self.CreateVariable('FloatOutput', self.Output, self.Float, 0.0)
@@ -160,11 +166,11 @@ class VirtualDevice(Device) :
     def Update(self) :
         now = datetime.datetime.now()
 
-        
-        #self.Set('BoolInput', now.second % 2)        
-        #self.Set('FloatInput', now.second + now.microsecond/1e6)
-        #self.Set('IntInput', now.second)
-        #self.Set('StringInput', now.strftime("%A, %d. %B %Y %I:%M:%S%p"))
+        if (self.Get('Incrementing')) :
+            self.Set('BoolInput', now.second % 2)        
+            self.Set('FloatInput', now.second + now.microsecond/1e6)
+            self.Set('IntInput', now.second)
+            self.Set('StringInput', now.strftime("%A, %d. %B %Y %I:%M:%S%p"))
 
 class IOExpansion(Device) :
     
@@ -174,7 +180,7 @@ class IOExpansion(Device) :
         self.CreateVariable('Address', self.Option, self.Int, 0x09)
 
         for i in range(6) :
-            self.CreateVariable('Input%d' %i, self.Option, self.Bool, False)
+            self.CreateVariable('Input%d' %i, self.Input, self.Bool, False)
     
     def Update(self) :
         address = self.Get('Address')
