@@ -1,0 +1,115 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	           "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<link href="/lib/jquery-ui-1.10.3.custom/css/aquapi/jquery-ui-1.10.3.custom.css" rel="stylesheet"/>
+<link href="aquapy.css" rel="stylesheet"/>
+<script src="/lib/jquery-ui-1.10.3.custom/js/jquery-1.9.1.js" type="text/javascript"></script>
+<script src="/lib/jquery-ui-1.10.3.custom/js/jquery-ui-1.10.3.custom.js" type="text/javascript"></script>
+<script src="aquapy.js" type="text/javascript"></script>
+<script src="widget.js" type="text/javascript"></script>
+<meta name="viewport" content="width=450">
+<link rel="icon" type="image/png" href="/images/aquapi-icon.png"/>
+<style>
+.widget {
+    border: 1px solid black;
+}
+.widgetHeader {
+    background: gray;
+    font-size: 1.5em;
+    font-style: bold;
+    height: 1.5em;
+}
+.widgetContent {
+    min-height: 10em;
+    text-align: center;
+    display: table-cell;
+    width: 100%;
+
+}
+.temperature {
+    font-size: 3em;
+}
+.outerWidget {
+    position: relative;
+}
+.widget {
+    border: 1px solid black;
+    margin: 5px;
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
+    position: absolute;
+    display: table-cell;
+    text-align: center;
+}
+#widgetContainer {
+    width: 800px;
+    height: 800px;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    position: relative;
+}
+.widgetTable {
+   height: 100%;
+   width: 100%;
+   border: 0;
+   margin: 0;
+   padding: 0;
+   border-collapse:collapse;
+}
+.widgetHeader {
+   height: 1.5em;
+
+}
+</style>
+<script type="text/javascript">
+"use strict";
+
+var aquapy = new AquaPy();
+
+function makeTemperatureWidget() {
+    var widget = makeWidget();
+    var content = $('<table class="widgetTable"><tr><td class="widgetHeader">Temperature</td></tr><tr><td class="temperature">78.2</td></tr></table>');
+    widget.append(content);
+    return widget;
+}
+
+$(document).ready(function () {
+    aquapy.Connect("ws://aquapi.rgba.net/socket");
+
+    var contentDiv = jQuery('#widgetContainer');
+    var table = jQuery('<table style="width: 100%; min-width: 40em; max-width:70em"/>').appendTo(contentDiv);
+    var tr = jQuery('<tr/>').appendTo(table);
+    var leftTd = jQuery('<td style="width: 30%;"/>').appendTo(tr);
+    var rightTd = jQuery('<td style="width: 70%;"/>').appendTo(tr);
+
+    makeTemperatureWidget();
+
+    $('.sidebarButton').button();
+});
+
+</script>
+</head>
+<body>
+<img src="/images/aquapi-logo.png" width="300px"/>
+<div style="text-align: right">Status</div>
+<table width="100%">
+<tr>
+<td class="sidebar">
+<a href="/status.html" class="sidebarButton">Status</a>
+<a href="/devices.html" class="sidebarButton">Devices</a>
+<a href="/rules.html" class="sidebarButton">Rules</a>
+
+</td><td>
+
+<div id="widgetContainer"></div>
+
+</td>
+</tr>
+</table>
+
+</body>
+</html>
