@@ -1,9 +1,13 @@
-
+"use strict";
 
 function AquaPy() {
-    
+    var _socket;
+    var aquapy = this;
+    var currentURL = undefined;
+
     // Connection
     this.Connect = function(url) {
+	currentURL = url;
 	_socket = new WebSocket(url);
 	_socket.onmessage = function(evt) {
 	    var payload = JSON.parse(evt.data);
@@ -17,6 +21,7 @@ function AquaPy() {
 	_socket.onclose = function(){
 	    console.log('Close');
 	    dispatch('close', null)
+	    aquapy.ShowConnectDialog();
 	}
 	_socket.onopen = function(){
 	    console.log('Open');
@@ -32,6 +37,21 @@ function AquaPy() {
 	this.Send('setValue', {'deviceName': deviceName, 'varName': varName, 'value': value})
     };
 
+
+    //
+    // Show connect dialog
+    //
+    this.ShowConnectDialog = function() {
+	var dialog = $('<div>The connection to the server has been lost.</div>').dialog({
+	    dialogClass: 'no-close',
+	    modal: true,
+	    title: 'Connection Lost',
+	    buttons: {"Reconnect": function () {
+		console.log('Reconnect');
+		$(this).dialog('close');
+		aquapy.Connect(currentURL);
+	    }}})
+    }
 
     //
     // Event Binding Utilities
@@ -62,6 +82,36 @@ function AquaPy() {
 
 };
 
+function createReadOnlyButton(deviceName, varInfo) {
+    var div = $('<div class="readOnlyButton ui-state-default">Off</div>');
+    var varName = varInfo['name'];
+
+    var setChecked = function(checked) {
+	if (checked) {
+	    div.removeClass('ui-state-default');
+	    div.addClass('ui-state-active');
+	    div.text('On');
+	} else {
+	    div.addClass('ui-state-default');
+	    div.removeClass('ui-state-active');
+	    div.text('Off');
+	}
+	div.change();
+    }
+    
+    var cb = function(data) {
+	if (data['deviceName'] != deviceName ||
+	    data['varName'] != varName) {
+	    return;
+	}
+	setChecked(data['value']);
+    }
+
+    setChecked(varInfo['value']);
+    aquapy.Bind('valueChanged', cb);
+    return div;
+}   
+
 function createButton(deviceName, varInfo) {
     var varName = varInfo['name']
 
@@ -77,8 +127,9 @@ function createButton(deviceName, varInfo) {
     };
 
     checkbox.click(function() {
-	checked = checkbox.is(':checked');
+	var checked = checkbox.is(':checked');
 	aquapy.SetValue(deviceName, varName, checked)
+	return false;
     })
 
     var cb = function(data) {
@@ -126,7 +177,7 @@ function createValueCell(deviceName, varInfo) {
 	    data['varName'] != varInfo['name']) {
 	    return;
 	}
-	div.text(data['value']);
+	div.text(data['value'].toFixed(1));
     };
     aquapy.Bind('valueChanged', cb);
     return div;
@@ -136,7 +187,11 @@ function createValueCell(deviceName, varInfo) {
 function createVarWidget(deviceName, varInfo) {
     switch (varInfo['valueType']) {    
     case 'bool':
-        return createButton(deviceName, varInfo);
+	if (varInfo['mode'] == 'input') {
+	    return createReadOnlyButton(deviceName, varInfo);
+	} else {
+            return createButton(deviceName, varInfo);
+	}
     case 'float':
     case 'int':
     case 'string':

@@ -7,6 +7,16 @@
 label {
     margin: .25em;
 }
+
+.no-close .ui-dialog-titlebar-close {
+      display: none;
+      }
+.readOnlyButton {
+    text-align: center;
+    padding: .4em .8em;
+    margin: .2em;
+    width: 2em;
+ }
 .valueCell {
     width: 100px;
     text-align: center;
