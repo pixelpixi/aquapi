@@ -1,5 +1,5 @@
 import Device, Rule
-import time, traceback
+import time, traceback, os, json
 
 class Controller(object) :
 
@@ -9,6 +9,11 @@ class Controller(object) :
         if (self.___instance) :
             raise self.___instance
         self.___instance = self
+
+        self.stateFilePath = '/home/ekt/aquapi.config'
+        self.state = {}
+        if (os.path.exists(self.stateFilePath)) :
+            self.state = json.load(open(self.stateFilePath))
 
         self.devices = {
             'Temperature': Device.Temperature(),
@@ -51,6 +56,16 @@ class Controller(object) :
     def Get(self, deviceName, varName) :
         device = self.devices[deviceName]
         return device.Get(varName)
+
+    def SetState(self, key, value) :
+        print 'Saving state file'
+        self.state[key] = value
+        json.dump(self.state, open(self.stateFilePath,'w'), indent=4)
+        
+    def GetState(self, key) :
+        if (key in self.state) :
+            return self.state[key]
+        return None
 
     def Update(self) :
         for deviceName,device in self.devices.iteritems() :

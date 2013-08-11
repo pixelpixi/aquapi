@@ -53,10 +53,19 @@ class Socket(tornado.websocket.WebSocketHandler) :
         if (event == 'getConfig') :
             config = self.application.controller.GetConfig()
             self.SendEvent('config', config)
-        if (event == 'setValue') :
+        elif (event == 'setValue') :
             self.application.controller.Set(data['deviceName'],
                                             data['varName'],
                                             data['value'])
+        elif (event == 'saveState') :
+            self.application.controller.SetState(
+                data['key'], data['value'])
+        elif (event == 'loadState') :
+            state = self.application.controller.GetState(data);
+            self.SendEvent('loadState',
+                {'key': data, 'value': state});
+        else :
+            print 'Error: Received invalid event: ', event;
 
     def SendEvent(self, event, data) :
         payload = {'event': event, 'data': data}
@@ -66,7 +75,10 @@ class Socket(tornado.websocket.WebSocketHandler) :
         payload = json.loads(message)
         event = payload['event']
         data = payload['data']
-        self.HandleEvent(event, data)
+        if (event == None) :
+            print('Received invalid message from client: ' + message);
+        else :
+            self.HandleEvent(event, data)
 
     def on_close(self) :
         ioloop = tornado.ioloop.IOLoop.instance()

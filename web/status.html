@@ -11,38 +11,28 @@
 <meta name="viewport" content="width=450">
 <link rel="icon" type="image/png" href="/images/aquapi-icon.png"/>
 <style>
-.widget {
-    border: 1px solid black;
-}
-.widgetHeader {
-    background: gray;
-    font-size: 1.5em;
-    font-style: bold;
-    height: 1.5em;
-}
-.widgetContent {
-    min-height: 10em;
-    text-align: center;
-    display: table-cell;
-    width: 100%;
-
-}
 .temperature {
     font-size: 3em;
+}
+.innerWidget {
+    position: absolute;
+    top: 2px;
+    bottom: 2px;
+    left: 2px;
+    right: 2px;
 }
 .outerWidget {
     position: relative;
 }
 .widget {
     border: 1px solid black;
-    margin: 5px;
-    left: 0px;
-    right: 0px;
-    top: 0px;
-    bottom: 0px;
-    position: absolute;
-    display: table-cell;
     text-align: center;
+}
+.widgetHeader {
+    background: gray;
+    font-size: 1.5em;
+    font-style: bold;
+    height: 1.5em;
 }
 #widgetContainer {
     width: 800px;
@@ -55,27 +45,34 @@
 .widgetTable {
    height: 100%;
    width: 100%;
-   border: 0;
-   margin: 0;
-   padding: 0;
+   border: 1px solid black;
    border-collapse:collapse;
+   position: relative;
 }
-.widgetHeader {
+.widgetTitle {
+   background: gray;
+   font-size: 1.5em;
    height: 1.5em;
-
+   text-align: center;
 }
+.widgetCloseButton {
+    position: absolute;
+    right: 3px;
+    top: 3px;
+    z-index: 100;
+    background: white;
+    font-size: 2em;
+}
+
+.menu {
+    width: 5em;
+}
+
 </style>
 <script type="text/javascript">
 "use strict";
 
 var aquapy = new AquaPy();
-
-function makeTemperatureWidget() {
-    var widget = makeWidget();
-    var content = $('<table class="widgetTable"><tr><td class="widgetHeader">Temperature</td></tr><tr><td class="temperature">78.2</td></tr></table>');
-    widget.append(content);
-    return widget;
-}
 
 $(document).ready(function () {
     aquapy.Connect("ws://aquapi.rgba.net/socket");
@@ -86,16 +83,26 @@ $(document).ready(function () {
     var leftTd = jQuery('<td style="width: 30%;"/>').appendTo(tr);
     var rightTd = jQuery('<td style="width: 70%;"/>').appendTo(tr);
 
-    makeTemperatureWidget();
+    //makeTemperatureWidget('Temperature','Temperature', 'Temperature');
+    //makeButtonWidget('SumpLight', 'RelayBox', 'Outlet0');
+
+    aquapy.Bind('open', function() {
+	loadWidgetState();
+    });
 
     $('.sidebarButton').button();
+
+    var addWidgetButton = $('<button>Add Widget</button>');
+    addWidgetButton.button();
+    addWidgetButton.click(showCreateWidgetDialog);
+    $('#menubar').append(addWidgetButton);
 });
 
 </script>
 </head>
 <body>
 <img src="/images/aquapi-logo.png" width="300px"/>
-<div style="text-align: right">Status</div>
+<div id="menubar" style="text-align: right"> </div>
 <table width="100%">
 <tr>
 <td class="sidebar">
@@ -110,6 +117,5 @@ $(document).ready(function () {
 </td>
 </tr>
 </table>
-
 </body>
 </html>
