@@ -1,3 +1,4 @@
+
 "use strict";
 
 var allWidgets = new Array();
@@ -40,31 +41,12 @@ function manufactureWidget(args) {
     }
     else if (args['type'] == 'cell') {
 	widget.content.addClass('temperature');
-	var v = new Variable(
-	    args['deviceName'],args['varName'],
-	    function (value) { 
-		widget.content.html(value.toFixed(1) + "&deg;F");
-	    });
+	aquapy.BindValue(args['deviceName'], args['varName'], function(value) {
+	    widget.content.html(value.toFixed(1) + "&deg;F");
+	});
     } else {
 	console.log('Invalid widget type: ' + args['type']);
     }
-    return widget;
-}
-
-function makeTemperatureWidget(title, deviceName, varName) {
-    var widget = new Widget(title);
-    widget.content.addClass('temperature');
-    var v = new Variable(
-	deviceName,varName,
-	function (value) { 
-	    widget.content.text(value.toFixed(1) + "&deg;F");
-	});
-}
-
-function makeButtonWidget(title, deviceName, varName) {
-    var widget = new Widget(title);
-    var button = createButton(deviceName,{'name': varName});
-    widget.content.append(button);
     return widget;
 }
 
@@ -116,12 +98,13 @@ function showCreateWidgetDialog() {
 
 function Widget(args) {
     var title = args['title'];
-    var outerWidget = $('<div class="outerWidget"/>');
+    var outerWidget = $('<div class="outerWidget ui-widget"/>');
     var table = $('<div class="innerWidget">' +
-	          '<table class="widgetTable">' +
-                  '<tr><td class="widgetTitle">' + title +
+	          '<table class="widgetTable ui-widget">' +
+                  '<tr><td class="widgetHeader ui-widget-header"><span>' + title +
+		  '</span><span class="widgetCloseIcon ui-icon ui-icon-circle-close"></span>' +
 		  '</td></tr>' +
-		  '<tr><td class="widget"></td></tr></table>' +
+		  '<tr><td class="widget ui-widget-content"></td></tr></table>' +
 		  '</div>');
     var widget = this;
 
@@ -155,15 +138,23 @@ function Widget(args) {
     outerWidget.width(100);
     outerWidget.height(100);
 
-    var closeButton = $('<span class="widgetCloseButton">X</span>');
-    outerWidget.append(closeButton);
+
     $('#widgetContainer').append(outerWidget);
+
+    var closeButton = outerWidget.find('.widgetCloseIcon')
     closeButton.click(function() {
 	allWidgets.splice(allWidgets.indexOf(widget), 1);
 	console.log(allWidgets);
 	outerWidget.remove();
 	saveWidgetsState();
     });
+    closeButton.hover(
+	function(event) {
+	},
+	function(event) {
+	}
+    )
+	
 
     this.content = outerWidget.find('.widget');
 

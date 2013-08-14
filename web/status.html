@@ -25,14 +25,10 @@
     position: relative;
 }
 .widget {
-    border: 1px solid black;
     text-align: center;
 }
 .widgetHeader {
-    background: gray;
-    font-size: 1.5em;
-    font-style: bold;
-    height: 1.5em;
+    height: 2em;
 }
 #widgetContainer {
     width: 800px;
@@ -42,6 +38,15 @@
     margin: 0;
     position: relative;
 }
+.widgetCloseIcon {
+    position: absolute;
+    right: .5em;
+    top: .5em;
+    opacity: .25;
+}
+.widgetCloseIcon:hover {
+    opacity: 1;
+}
 .widgetTable {
    height: 100%;
    width: 100%;
@@ -49,18 +54,11 @@
    border-collapse:collapse;
    position: relative;
 }
-.widgetTitle {
-   background: gray;
-   font-size: 1.5em;
-   height: 1.5em;
-   text-align: center;
-}
 .widgetCloseButton {
     position: absolute;
     right: 3px;
     top: 3px;
     z-index: 100;
-    background: white;
     font-size: 2em;
 }
 

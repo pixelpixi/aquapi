@@ -30,12 +30,9 @@ function AquaPy() {
     }
 
     //
-    // Variable Access
+    // State
     //
 
-    this.SetValue = function(deviceName, varName, value) {
-	this.Send('setValue', {'deviceName': deviceName, 'varName': varName, 'value': value})
-    };
 
     this.SaveState = function(key, value) {
 	this.Send('saveState', {
@@ -97,25 +94,94 @@ function AquaPy() {
 	}
     };
 
-};
+    //
+    // Devices
+    //
+    var devices = {}
 
-function Variable(deviceName, varName, onValueChanged) {
-    var cb = function(data) {
-	if (data['deviceName'] != deviceName ||
-	    data['varName'] != varName) {
-	    return;
-	}
-	if (onValueChanged) {
-	    onValueChanged(data['value'])
+    var onDeviceChanged = function(data) {
+	devices[data['deviceName']] = data;
+    }
+    var onDeviceRemoved = function(data) {
+	var index = devices.indexOf[data['deviceName']];
+	if (index >= 0) {
+	    devices.splice(index,1);
 	}
     }
+    this.GetDevices = function() {
+	return devices;
+    }
+    this.Bind('deviceChanged', onDeviceChanged);
+    this.Bind('deviceRemoved', onDeviceRemoved);
 
-    this.SetValue = function(value) {
-	aquapy.SetValue(deviceName, varName, value);
+    //
+    // Variables
+    //
+    
+    var variables = {}
+
+    var onVariableChanged = function(data) {
+	devices[data['varName']] = data;
+    }
+    var onVariableRemoved = function(data) {
+	var index = devices.indexOf[data['varName']];
+	if (index >= 0) {
+	    devices.splice(index,1);
+	}
     }
     
-    aquapy.Bind('valueChanged', cb);
-}
+    // Get the the configuration dictionary for a particular variable
+    this.GetVariable = function(deviceName, varName) {
+	return variables[deviceName + ":" + varName];
+    }
+
+    this.Bind('variableChanged', onVariableChanged);
+    this.Bind('variableRemoved', onVariableRemoved);
+
+    //
+    // Values
+    //
+
+    var values = {}
+
+    // Get the value for a particular variable
+    this.GetValue = function(deviceName, varName) {
+	return values[deviceName + ":" + varName];
+    }
+    this.SetValue = function(deviceName, varName, value) {
+	this.Send('setValue', {'deviceName': deviceName, 'varName': varName, 'value': value})
+    }
+    
+    var _valueCallbacks = {};
+    this.BindValue = function(deviceName, varName, callback) {
+	var key = deviceName + ":" + varName;
+	_valueCallbacks[key] = _valueCallbacks[key] || [];
+	_valueCallbacks[key].push(callback);
+
+	// If we already have a value for this key, them immediately
+	// call the callback.
+	if (typeof values[key] != undefined) {
+	    callback(values[key]);
+	}
+    }
+
+    var onValueChanged = function(data) {
+	var key = data['deviceName'] + ':' + data['varName']
+
+	// Store the value locally
+	values[key] = data['value']
+
+	var chain = _valueCallbacks[key];
+	if (typeof chain == 'undefined') {
+	    return;
+	}
+	for (var i=0; i < chain.length; i++) {
+	    chain[i](data['value']);
+	}
+    }
+
+    this.Bind('valueChanged', onValueChanged);
+};
 
 function createReadOnlyButton(deviceName, varInfo) {
     var div = $('<div class="readOnlyButton ui-state-default">Off</div>');
@@ -134,9 +200,7 @@ function createReadOnlyButton(deviceName, varInfo) {
 	div.change();
     }
 
-    var v = new Variable(deviceName, varInfo['name'], setChecked);
-
-    setChecked(varInfo['value']);
+    aquapy.BindValue(deviceName, varName, setChecked);
 
     return div;
 }
@@ -172,16 +236,7 @@ function createButton(deviceName, varInfo, readOnly) {
 	aquapy.SetValue(deviceName, varName, checked)
     });
 
-    var cb = function(data) {
-	if (data['deviceName'] != deviceName ||
-	    data['varName'] != varName) {
-	    return;
-	}
-	setChecked(data['value']);
-    }
-
-    setChecked(varInfo['value']);
-    aquapy.Bind('valueChanged', cb);
+    aquapy.BindValue(deviceName, varName, setChecked);
     return div;
 }
 

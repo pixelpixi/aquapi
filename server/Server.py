@@ -44,9 +44,13 @@ class Socket(tornado.websocket.WebSocketHandler) :
 
     def open(self) :
         print 'Open'
-        self.previousValues = {}
+        self._deviceDescriptions = {}
+        self._varValues = {}
+        self._varDescriptions = {}
+
         self.timeout = None
-        self._update()
+        self._Update()
+        self.SendEvent('loaded',{})
 
 
     def HandleEvent(self, event, data) :
@@ -85,26 +89,54 @@ class Socket(tornado.websocket.WebSocketHandler) :
         if (self.timeout) :
             ioloop.remove_timeout(self.timeout)
     
-    def _update(self) :
+    def _Update(self) :
 
         for deviceName,device in self.application.controller.devices.iteritems() :
+            self._UpdateDeviceDescription(deviceName, device)
+
             for variableName,variable in device.GetVariables().iteritems() :
-                newValue = self.application.controller.Get(deviceName, variableName)
-                key = deviceName + '.' + variableName
-
-                if (key not in self.previousValues or
-                    self.previousValues[key] != newValue) :
-                    self.previousValues[key] = newValue
-
-                    data = {'deviceName': deviceName,
-                            'varName': variableName,
-                            'value': newValue}
-                    print 'Sending valueChanged:',key,data
-                    self.SendEvent('valueChanged',  data)
+                self._UpdateVarDescription(deviceName, variableName, variable)
+                self._UpdateVarValue(deviceName, variableName, device.Get(variableName))
 
                                    
         ioloop = tornado.ioloop.IOLoop.instance()
-        self.timeout = ioloop.add_timeout(ioloop.time() + .25, self._update)
+        self.timeout = ioloop.add_timeout(ioloop.time() + .25, self._Update)
+
+    def _UpdateDeviceDescription(self, deviceName, device) :
+        deviceDescription = {'deviceName': deviceName,
+                                 'variables': device.GetVariables().keys()}
+        if (deviceName not in self._deviceDescriptions or
+            self._deviceDescriptions[deviceName] != deviceDescription) :
+            self._deviceDescriptions[deviceName] = deviceDescription
+            self.SendEvent('deviceChanged', deviceDescription)
+
+    def _UpdateVarDescription(self, deviceName, varName, variable) :
+        # Key that uniquely identifies this variable
+        key = deviceName + ':' + varName
+
+        # The variable description is just the mode right now, but this
+        # will be expanded in the future.
+        varDescription = {
+            'deviceName': deviceName,
+            'varName': varName,
+            'mode':  variable["mode"]}
+        if (key not in self._varDescriptions or
+            self._varDescriptions[key] != varDescription) :
+            self._varDescriptions[key] = varDescription
+            self.SendEvent('variableChanged', varDescription)
+    
+    def _UpdateVarValue(self, deviceName, varName, value) :
+        # Key that uniquely identifies this variable
+        key = deviceName + ':' + varName
+
+        varValue = {'deviceName': deviceName,
+                    'varName': varName,
+                    'value': value}
+        if (key not in self._varValues or
+            self._varValues[key] != varValue) :
+            self._varValues[key] = varValue
+            self.SendEvent('valueChanged',  varValue)
+
 
 def RunServer(controller) :
 

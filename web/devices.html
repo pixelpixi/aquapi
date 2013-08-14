@@ -39,7 +39,6 @@ $(document).ready(function () {
         var div = $('<div/>').appendTo(accordion);
 
 	var table = $('<table class="varTable"/>').appendTo(div);
-		
 
 	var modes = ["input","output","option"];
 	var modeNames = ["Inputs","Outputs","Options"];
@@ -72,7 +71,8 @@ $(document).ready(function () {
     }
 
     function loadConfig(config) {
-        console.log('Payload: ' + config);
+        console.log('Payload: ');
+        console.log(config);
 	accordion.html('');
         for (var deviceName in config) {
             createDeviceDiv(deviceName, config[deviceName]);
@@ -85,8 +85,22 @@ $(document).ready(function () {
 	aquapy.Send('getConfig',{})
     }
 
+    function loadDevice(deviceName, device) {
+	var variables = device['variables'];
+	for (var varName in variables) {
+	}
+    }
+
+    function onLoaded() {
+	var devices = GetDevices();
+	for (var deviceName in devices) {
+	    loadDevice(deviceName, devices[deviceName])
+	}
+    }
+
     aquapy.Bind('config', loadConfig)
     aquapy.Bind('open', onOpen);
+    //aquapy.Bind('loaded', onLoaded);
     
     
     $('.sidebarButton').button();
