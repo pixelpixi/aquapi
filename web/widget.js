@@ -12,7 +12,6 @@ function saveWidgetsState() {
 
 function loadWidgetState() {
     var loadStateCB = function (data) {
-	console.log(data);
 	var widgetsByTitle = {}
 	for (var i=0; i < allWidgets.length; i++) {
 	    var state = allWidgets[i].GetState();
@@ -76,7 +75,6 @@ function showCreateWidgetDialog() {
     var variableSelector = $('<select/>').appendTo(dialog);
 
     aquapy.Bind('config', function (config) {
-	console.log(config);
 	for (var deviceName in config) {
 	    var device = config[deviceName];
 	    var variables = device['variables'];
@@ -98,17 +96,28 @@ function showCreateWidgetDialog() {
 function Widget(args) {
     var title = args['title'];
     var outerWidget = $('<div class="outerWidget"/>');
-    var table = $('<div class="innerWidget">' +
+    var innerWidget = $('<div class="innerWidget">' +
 	          '<table class="widgetTable">' +
                   '<tr><td class="widgetHeader">' + title + '</td><td class="widgetCloseIcon ">' +
                   '<img src="/images/gear-20.png"/>' +
 		  '</td></tr>' +
 		  '<tr><td colspan=2 class="widget"></td></tr></table>' +
 		  '</div>');
+    var settingsWidget = $('<div class="innerWidget">' +
+	          '<table class="widgetTable">' +
+                  '<tr><td class="widgetHeader"><input value="' + title + '">' +
+	          '</input></td><td class="widgetCloseIcon ">' +
+                  '<img src="/images/gear-20.png"/>' +
+		  '</td></tr>' +
+		  '<tr><td colspan=2 class="widget">Settings</td></tr>' +
+	          '<tr><td colspan=2 class="widgetRemove">Remove</td></tr>' +
+		  '</table></div>');
     var widget = this;
-
     
-    outerWidget.append(table);
+    outerWidget.append(innerWidget);
+    outerWidget.append(settingsWidget);
+    innerWidget.show();
+    settingsWidget.hide();
 
     outerWidget.draggable({
         stack: "#widgetContainer div",
@@ -140,26 +149,41 @@ function Widget(args) {
 
     $('#widgetContainer').append(outerWidget);
 
-    var closeButton = outerWidget.find('.widgetCloseIcon')
-    closeButton.click(function() {
-	allWidgets.splice(allWidgets.indexOf(widget), 1);
-	console.log(allWidgets);
-	outerWidget.remove();
-	saveWidgetsState();
-    });
-    closeButton.hover(
-	function(event) {
-	},
-	function(event) {
-	}
-    )
-	
+    var titleElem = innerWidget.find('.widgetHeader');
+    var titleInput = settingsWidget.find('.widgetHeader').find('input');
 
-    this.content = outerWidget.find('.widget');
+    var saveTitle = function() {
+	title = titleInput.val();
+	titleElem.text(title);
+	saveWidgetsState();
+    };
+    titleInput.change(saveTitle);
+
+    var showSettingsButton = innerWidget.find('.widgetCloseIcon')
+    showSettingsButton.click(function() {
+	settingsWidget.show();
+	innerWidget.hide();
+    });
+
+    var hideSettingsButton = settingsWidget.find('.widgetCloseIcon')
+    hideSettingsButton.click(function() {
+	saveTitle();
+	settingsWidget.hide();
+	innerWidget.show();
+    });
+
+    var removeWidgetButton = settingsWidget.find('.widgetRemove');
+    removeWidgetButton.click(function() {
+	outerWidget.remove();
+	allWidgets.splice(allWidgets.indexOf(widget), 1);
+	saveWidgetsState();
+    });	
+
+    this.content = innerWidget.find('.widget');
 
     this.GetState = function() {
 	return {
-	    title: outerWidget.find('.widgetTitle').text(),
+	    title: title,
 	    left: outerWidget.position().left,
 	    top: outerWidget.position().top,
 	    width: outerWidget.width(),
@@ -168,7 +192,9 @@ function Widget(args) {
 	}
     }
     this.SetState = function(state) {
-	outerWidget.find('.widgetTitle').text(state['title']);
+	title = state['title']
+	titleElem.text(title);
+	titleInput.val(title);
 	outerWidget.css(state)
     }
 

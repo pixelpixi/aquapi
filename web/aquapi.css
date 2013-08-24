@@ -63,10 +63,14 @@ body {
  */
 .innerWidget {
     position: absolute;
-    top: 2px;
-    bottom: 2px;
-    left: 2px;
-    right: 2px;
+    top: 4px;
+    bottom: 4px;
+    left: 4px;
+    right: 4px;
+    padding: 4px;
+    background: white;
+    border: 1px solid #aaa;
+    border-radius: 10px;
 }
 .outerWidget {
     position: relative;
@@ -75,7 +79,18 @@ body {
     text-align: center;
 }
 .widgetTable {
-    background: white;
+
+}
+.widgetRemove {
+    height: 1em;
+    text-align: right;
+    color: rgb(50,80,200);
+}
+.widgetRemove:hover {
+    height: 1em;
+    text-align: right;
+    color: rgb(50,120,255);
+    cursor: default;
 }
 .widgetHeader {
     height: 2em;
@@ -102,8 +117,6 @@ body {
 .widgetTable {
     height: 100%;
     width: 100%;
-    border: 1px solid #aaa;
-    border-radius: 10px;
     position: relative;
 }
 .widgetCloseButton {
