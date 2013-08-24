@@ -1,4 +1,3 @@
-
 "use strict";
 
 var allWidgets = new Array();
@@ -98,13 +97,13 @@ function showCreateWidgetDialog() {
 
 function Widget(args) {
     var title = args['title'];
-    var outerWidget = $('<div class="outerWidget ui-widget"/>');
+    var outerWidget = $('<div class="outerWidget"/>');
     var table = $('<div class="innerWidget">' +
-	          '<table class="widgetTable ui-widget">' +
-                  '<tr><td class="widgetHeader ui-widget-header"><span>' + title +
-		  '</span><span class="widgetCloseIcon ui-icon ui-icon-circle-close"></span>' +
+	          '<table class="widgetTable">' +
+                  '<tr><td class="widgetHeader">' + title + '</td><td class="widgetCloseIcon ">' +
+                  '<img src="/images/gear-20.png"/>' +
 		  '</td></tr>' +
-		  '<tr><td class="widget ui-widget-content"></td></tr></table>' +
+		  '<tr><td colspan=2 class="widget"></td></tr></table>' +
 		  '</div>');
     var widget = this;
 

@@ -1,0 +1,228 @@
+
+body {
+    font: 80% "Trebuchet MS", sans-serif;
+    margin: 0px;
+    background: #f0f0f0;
+}
+.centeredContent {
+    position: relative;
+    width: 800px;
+    margin: 0px auto;
+    border-right: 1px solid #aaa;
+    border-left: 1px solid #aaa;
+    border-bottom: 1px solid #aaa;
+    min-height: 700px;
+    padding: 5px;
+    background: white;
+}
+
+
+/*
+ * Page Header
+ */
+
+.header {
+    background: white;
+}
+.headerContent {
+    width: 800px;
+    margin: 0px auto;
+}
+.header {
+    background: white;
+}
+.headerContent {
+    width: 800px;
+    margin: 0px auto;
+}
+.headerItem {
+    vertical-align: middle;
+    font-size: 1.25em;
+    padding: .5em;
+    cursor: default;
+    text-align: center;
+}
+.headerItem:hover {
+    color: #1166DD;
+}
+.activeHeaderItem {
+    color: #1166DD;
+    font-size: 1.25em;
+    font-weight: bold;
+    cursor: default;
+}
+.headerSeparator {
+    background: #eee;
+    height: 1em;
+    border-top: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+}
+
+/*
+ * Widgets
+ */
+.innerWidget {
+    position: absolute;
+    top: 2px;
+    bottom: 2px;
+    left: 2px;
+    right: 2px;
+}
+.outerWidget {
+    position: relative;
+}
+.widget {
+    text-align: center;
+}
+.widgetTable {
+    background: white;
+}
+.widgetHeader {
+    height: 2em;
+    font-size: 120%;
+    padding: .4em;
+}
+#widgetContainer {
+    width: 800px;
+    height: 800px;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    position: relative;
+    background: rgb(212,220,230);
+}
+.widgetCloseIcon {
+    opacity: .1;
+    width: 30px;
+    text-align: center;
+}
+.widgetCloseIcon:hover {
+    opacity: .8;
+}
+.widgetTable {
+    height: 100%;
+    width: 100%;
+    border: 1px solid #aaa;
+    border-radius: 10px;
+    position: relative;
+}
+.widgetCloseButton {
+    position: absolute;
+    right: 3px;
+    top: 3px;
+    z-index: 100;
+    font-size: 2em;
+}
+
+.addWidgetButton {
+    position: absolute;
+    top: 40px;
+    right: -30px;
+    width: 30px;
+    height: 40px;
+    background: #00ddff;
+    border-top-right-radius: 7px;
+    border-bottom-right-radius: 7px;
+    background: #00ccff url('/images/add.png') no-repeat;
+}
+
+.temperature {
+    font-size: 3em;
+}
+
+
+/*
+ *   Devices
+ */
+
+.readOnlyButton {
+    text-align: center;
+    padding: .4em .8em;
+    margin: .2em;
+    width: 2em;
+ }
+.varTable {
+    width: 100%
+}
+.varTableNameTd {
+    width: 10em;
+    text-align: right;
+}
+.valueCell {
+    width: 100px;
+    text-align: center;
+    font-size: 1em;
+    margin: .25em;
+}
+
+/*
+label {
+    margin: .25em;
+}
+
+
+.togglerOff {
+    width: 5em;
+    height: 5em;
+    border: 1px solid red;
+}
+.togglerOn {
+    width: 5em;
+    height: 5em;
+    border: 1px solid white;
+}
+
+.sidebar {
+    width: 8em;
+    vertical-align: top;
+}
+.sidebarButton {
+    width: 100%;
+}
+
+.headerRow {
+    background: #444444;
+    padding: .4em;
+}
+#dialog-link {
+    padding: .4em 1em .4em 20px;
+    text-decoration: none;
+    position: relative;
+}
+#dialog-link span.ui-icon {
+    margin: 0 5px 0 0;
+    position: absolute;
+    left: .2em;
+    top: 50%;
+    margin-top: -8px;
+}
+#icons {
+    margin: 0;
+    padding: 0;
+}
+#icons li {
+    margin: 2px;
+    position: relative;
+    padding: 4px 0;
+    cursor: pointer;
+    float: left;
+    list-style: none;
+}
+#icons span.ui-icon {
+    float: left;
+    margin: 0 4px;
+}
+.fakewindowcontain .ui-widget-overlay {
+    position: absolute;
+}
+*/
+/*
+#menubar {
+    position: absolute;
+    top: 0;
+    left: 225px;
+    height: 100%;
+    background: blue;
+}
+*/
+

@@ -40,6 +40,10 @@ class GetConfig(tornado.web.RequestHandler) :
         self.write(json.dumps(vars))
 
 
+class Template(tornado.web.RequestHandler) :
+    def get(self) :
+        self.write(open('/home/ekt/AquaPi/web/aquapi.html').read())
+
 class Socket(tornado.websocket.WebSocketHandler) :
 
     def open(self) :
@@ -142,8 +146,11 @@ def RunServer(controller) :
 
     application = tornado.web.Application([
             (r"/socket", Socket),
-            (r"/", tornado.web.RedirectHandler, {"url": "/devices.html"}),
+            (r"/", Template),
+            (r"/devices", Template),
+            (r"/rules", Template),
             (r"/(.*)", tornado.web.StaticFileHandler, {"path": "/home/ekt/AquaPi/web/"})
+
         ])
 
     application.controller = controller

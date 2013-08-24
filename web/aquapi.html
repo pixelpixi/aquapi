@@ -3,23 +3,36 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <link href="/lib/jquery-ui-1.10.3.custom/css/aquapi/jquery-ui-1.10.3.custom.css" rel="stylesheet"/>
-<link href="aquapy.css" rel="stylesheet"/>
+<link href="aquapi.css" rel="stylesheet"/>
 <script src="/lib/jquery-ui-1.10.3.custom/js/jquery-1.9.1.js" type="text/javascript"></script>
 <script src="/lib/jquery-ui-1.10.3.custom/js/jquery-ui-1.10.3.custom.js" type="text/javascript"></script>
-<script src="aquapy.js" type="text/javascript"></script>
+<script src="aquapi.js" type="text/javascript"></script>
+<script src="widget.js" type="text/javascript"></script>
 <meta name="viewport" content="width=450">
 <link rel="icon" type="image/png" href="/images/aquapi-icon.png"/>
 <script type="text/javascript">
 "use strict";
 
-var aquapy = new AquaPy();
+function loadDashboard() {
+    aquapy.Bind('open', function() {
+	loadWidgetState();
+    });
 
-$(document).ready(function () {
+    var widgetContainer = $('<div id="widgetContainer"></div>');
+    $('.centeredContent').append(widgetContainer);
 
-    //aquapy.ShowConnectDialog();
-    aquapy.Connect("ws://aquapi.rgba.net/socket");
+    var addWidgetButton = $('<div class="addWidgetButton"></div>');
+    $('.centeredContent').append(addWidgetButton);
 
-    var accordion = $( "#accordion" );
+    //var addWidgetButton = $('<button>Add Widget</button>');
+    //addWidgetButton.button();
+    addWidgetButton.click(showCreateWidgetDialog);
+}
+
+function loadDevices() {
+
+    var accordion = $('<div id="accorcian"></div>');
+    $('.centeredContent').append(accordion);
 
     function createFieldSet(modeName, deviceName, varInfos) {
         var fieldset = $('<fieldset><legend>' + modeName + '</legend></fieldset>');
@@ -77,7 +90,7 @@ $(document).ready(function () {
         for (var deviceName in config) {
             createDeviceDiv(deviceName, config[deviceName]);
         }
-        accordion.accordion();
+        accordion.accordion({heightStyle: 'content'});
         accordion.accordion('refresh');
     }
 
@@ -100,30 +113,47 @@ $(document).ready(function () {
 
     aquapy.Bind('config', loadConfig)
     aquapy.Bind('open', onOpen);
-    //aquapy.Bind('loaded', onLoaded);
-    
-    
-    $('.sidebarButton').button();
-});
+}
 
+var aquapy = new AquaPy();
+
+$(document).ready(function () {
+    $('.headerItem').click(function(item) {
+	var url = item.target.attributes.url.value;
+	window.location = url;
+    });
+
+    aquapy.Connect("ws://" + window.location.hostname + "/socket");
+    
+    switch(location.pathname) {
+    case '/':
+	loadDashboard();
+	break;
+    case '/devices':
+	loadDevices();
+	break;
+    }
+    $("[url='" + location.pathname + "']").addClass('activeHeaderItem');
+
+});
 
 </script>
 </head>
-<body>
-<img src="/images/aquapi-logo.png" width="300px"/>
-<div style="text-align: right">Status</div>
-<table width="100%">
-<tr>
-<td class="sidebar">
-<a href="/status.html" class="sidebarButton">Status</a>
-<a href="/devices.html" class="sidebarButton">Devices</a>
-<a href="/rules.html" class="sidebarButton">Rules</a>
 
-</td><td>
-<div id="accordion"/>
-</td>
-</tr>
-</table>
+<body>
+
+<div class="header">
+<table class="headerContent"><tr>
+<td><img src="/images/aquapi-logo.png" height="75px" class="headerItem" url="/"/></td>
+<td style="width: 100%"></td>
+<td class="headerItem" url="/">Dashboard</td>
+<td class="headerItem" url="/devices">Devices</td>
+<td class="headerItem" url="/rules">Rules</td>
+</tr></table>
+</div>
+
+<div class="headerSeparator"></div>
+<div class="centeredContent"></div>
 
 </body>
 </html>
