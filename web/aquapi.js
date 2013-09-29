@@ -209,13 +209,13 @@ function createButton(deviceName, varInfo, readOnly) {
     var varName = varInfo['name']
 
     var div = $('<span/>');
-    var checkbox = $('<input type="checkbox"/>').uniqueId().appendTo(div);
-    var label = $('<label for="' + checkbox.attr('id') + '">On</label>').appendTo(div);
-    checkbox.button();
+    var checkboxInput = $('<input type="checkbox"/>').uniqueId().appendTo(div);
+    var label = $('<label for="' + checkboxInput.attr('id') + '">On</label>').appendTo(div);
+    var checkbox = checkboxInput.button();
 
     var setChecked = function(checked) {
 	checkbox.button('option','label',checked ? 'On' : 'Off');
-	checkbox.prop('checked', checked);
+	checkboxInput.prop('checked', checked);
 	checkbox.button('refresh');
     };
 
@@ -230,7 +230,7 @@ function createButton(deviceName, varInfo, readOnly) {
 	})
     }
 
-    checkbox.click(function(event) {
+    checkboxInput.click(function(event) {
 	console.log('Click');
 	var checked = checkbox.is(':checked');
 	aquapy.SetValue(deviceName, varName, checked)

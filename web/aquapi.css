@@ -239,3 +239,46 @@ label {
 }
 */
 
+/*
+ * Devices
+ */
+
+.devicesTable {
+    width: 100%;
+}
+
+.devicesList {
+    width: 30%;
+    vertical-align: top;
+}
+
+.deviceName {
+    padding: 5px;
+    margin: 5px;
+    font-size: 1.3em;
+    background: #eee;
+    border: 1px solid #aaaaaa;
+}
+
+.selectedDeviceName {
+    background: #3399EE;
+    color: white;
+}
+.devicesList div:hover {
+    border: 1px solid #5599FF;
+}
+
+.variableTableNames {
+    width: 100px;
+    padding: 5px;
+    text-align: right;
+    vertical-align: middle;
+}
+.deviceOptionsTable {
+    width: 100%;
+}
+.deviceOptionsHeader {
+    background: #ccc;
+    font-size: 1.2em;
+    padding: 5px;
+}
