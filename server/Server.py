@@ -42,7 +42,7 @@ class GetConfig(tornado.web.RequestHandler) :
 
 class Template(tornado.web.RequestHandler) :
     def get(self) :
-        self.write(open('/home/ekt/AquaPi/web/aquapi.html').read())
+        self.write(open(os.path.join(self.application.baseDir,'web/aquapi.html')).read())
 
 class Socket(tornado.websocket.WebSocketHandler) :
 
@@ -143,17 +143,19 @@ class Socket(tornado.websocket.WebSocketHandler) :
 
 
 def RunServer(controller) :
+    baseDir = os.path.dirname(os.path.dirname(__file__))
+    print baseDir
 
     application = tornado.web.Application([
             (r"/socket", Socket),
             (r"/", Template),
             (r"/devices", Template),
             (r"/rules", Template),
-            (r"/(.*)", tornado.web.StaticFileHandler, {"path": "/home/ekt/AquaPi/web/"})
-
+            (r"/(.*)", tornado.web.StaticFileHandler, {"path": os.path.join(baseDir,'web')})
         ])
 
     application.controller = controller
+    application.baseDir = baseDir
     callback = tornado.ioloop.PeriodicCallback(controller.Update, 500)
     callback.start()
 

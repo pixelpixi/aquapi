@@ -1,5 +1,4 @@
-import smbus, time, datetime, threading, glob
-import RPi.GPIO as GPIO
+import time, datetime, threading, glob
 
 class Device(object) :
 
@@ -99,10 +98,14 @@ class Temperature(Device) :
             self._thread = TemperatureThread(self._deviceFile)
             self._thread.start()
 
+class VirtualTemperature(Device) :
+    def Init(self) :
+        self.CreateVariable('Temperature', self.Input, self.Float, 78.0)
 
 class RelayBox(Device) :
 
     def Init(self) :
+        import smbus
         self._bus = smbus.SMBus(0)
 
         self.CreateVariable('Address', self.Option, self.Int, 0x38)
@@ -122,9 +125,21 @@ class RelayBox(Device) :
         address = self.Get('Address')
         self._bus.write_byte(address, byte)
 
+
+class VirtualRelayBox(Device) :
+
+    def Init(self) :
+        self.CreateVariable('Address', self.Option, self.Int, 0x38)
+
+        for i in range(8) :
+            self.CreateVariable('Outlet%d' % i, self.Output, self.Bool, False)
+
+
 class GPIORelayBox(Device) :
 
     def Init(self) :
+        import RPi.GPIO as GPIO
+
         self._gpioPins = [7,8,9,10,22,23,24,25]
         self._values = [False]*8
         GPIO.setmode(GPIO.BCM)
@@ -135,6 +150,7 @@ class GPIORelayBox(Device) :
             self.CreateVariable('Outlet%d' % i, self.Output, self.Bool, False)
 
     def Update(self) :
+        import RPi.GPIO as GPIO
 
         for i in range(8) :
             outputName = 'Outlet%d' % i
@@ -175,6 +191,7 @@ class VirtualDevice(Device) :
 class IOExpansion(Device) :
     
     def Init(self) :
+        import smbus
         self._bus = smbus.SMBus(0)
         
         self.CreateVariable('Address', self.Option, self.Int, 0x09)
@@ -188,7 +205,14 @@ class IOExpansion(Device) :
         for i in range(6) :
             val = not bool(inputByte & (1 << i))
             self.Set('Input%d' % i, val)
-        
+
+class VirtualIOExpansion(Device) :
+    def Init(self) :
+        self.CreateVariable('Address', self.Option, self.Int, 0x09)
+
+        for i in range(6) :
+            self.CreateVariable('Input%d' %i, self.Input, self.Bool, False)
+
 class AlternatingDevice(Device) :
 
     def Init(self) :
