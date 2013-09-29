@@ -10,12 +10,17 @@ import Device, Rule, Controller, Server
 
 #controller.Run()
 
-import RPi.GPIO as GPIO
 import time, signal, sys
 
 def _SignalHandler(signum, stack) :
-    print 'Resetting GPIO'
-    GPIO.cleanup()
+    try :
+        print 'Resetting GPIO'
+        import RPi.GPIO as GPIO
+        
+        GPIO.cleanup()
+    except ImportError:
+        pass
+
     sys.exit(0)
 
 signal.signal(signal.SIGINT, _SignalHandler)

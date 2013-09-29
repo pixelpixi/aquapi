@@ -123,7 +123,8 @@ $(document).ready(function () {
 	window.location = url;
     });
 
-    aquapy.Connect("ws://" + window.location.hostname + "/socket");
+    
+    aquapy.Connect("ws://" + window.location.hostname + ":" + window.location.port + "/socket");
     
     switch(location.pathname) {
     case '/':
