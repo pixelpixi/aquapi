@@ -3,56 +3,60 @@
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
-import json, math
-
 import tornado.ioloop
 import tornado.web
 
-import os
-
-class ToggleHandler(tornado.web.RequestHandler) :
-    def initialize(self) :
-        self.controller = self.application.controller
-
-    def get(self) :
-        deviceName = self.get_argument('deviceName')
-        varName = self.get_argument('varName')
-        value = self.controller.Get(deviceName, varName)
-        print 'Toggle', value
-        self.controller.Set(deviceName, varName, not value)
-
-class SetValue(tornado.web.RequestHandler) :
-    def initialize(self) :
-        self.controller = self.application.controller
-
-    def get(self) :
-        controller = self.application.controller
-        deviceName = self.get_argument('deviceName')
-        varName = self.get_argument('varName')
-        value = self.get_argument('value')
-        print 'Set', deviceName, varName, value
-        self.controller.Set(deviceName, varName, value)
-
-class GetConfig(tornado.web.RequestHandler) :
-
-    def get(self) :
-        print 'Get Config'
-        self.write(json.dumps(vars))
+import os, json, math, base64
 
 
 class Template(tornado.web.RequestHandler) :
+
+    @tornado.web.authenticated
     def get(self) :
         self.write(open(os.path.join(self.application.baseDir,'web/aquapi.html')).read())
+
+    def get_current_user(self):
+        user = self.get_secure_cookie("user")
+        print 'User is: ', user
+        return user
+
+class Login(tornado.web.RequestHandler) :
+
+    password = 'fugu'
+
+    def get(self) :
+        self.write(open(os.path.join(self.application.baseDir,'web/aquapi.html')).read())
+
+    def post(self) :
+        print "'%s'" % self.get_argument("pwd")
+        if (self.get_argument("pwd") == self.password) :
+            self.set_secure_cookie("user", "aquapi")
+            self.redirect(self.get_argument('next', '/'))
+        else :
+            self.set_secure_cookie("user", None)
+
+    def get_current_user(self):
+        return self.get_secure_cookie("user")
+
+class Logout(tornado.web.RequestHandler) :
+
+    def get(self) :
+        self.clear_cookie('user')
+        self.redirect("/login")
 
 class Socket(tornado.websocket.WebSocketHandler) :
 
     def open(self) :
-        print 'Open'
+        self.timeout = None
         self._deviceDescriptions = {}
         self._varValues = {}
         self._varDescriptions = {}
 
-        self.timeout = None
+        if (not self.get_secure_cookie("user")) :
+            print 'Closing websocket. Not authenticated'
+            self.close()
+            return
+
         self._Update()
         self.SendEvent('loaded',{})
 
@@ -142,23 +146,43 @@ class Socket(tornado.websocket.WebSocketHandler) :
             self.SendEvent('valueChanged',  varValue)
 
 
+def GetCookieSecret() :
+    secretfile = '/home/ekt/aquapi.secret'
+    if (os.path.exists(secretfile)) :
+        secret = open(secretfile).read().strip()
+    else :
+        secret = base64.b64encode(os.urandom(32))
+        open(secretfile,'w').write(secret + "\n")
+    # XXX: Is it secure to return this in a base64 encoded form?
+    return secret
+
 def RunServer(controller) :
     baseDir = os.path.dirname(os.path.dirname(__file__))
     print baseDir
 
-    application = tornado.web.Application([
-            (r"/socket", Socket),
-            (r"/", Template),
-            (r"/devices", Template),
-            (r"/rules", Template),
-            (r"/(.*)", tornado.web.StaticFileHandler, {"path": os.path.join(baseDir,'web')})
-        ])
+    cookieSecret = GetCookieSecret()
+
+    handlers = [
+        (r"/socket", Socket),
+        (r"/", Template),
+        (r"/login", Login),
+        (r"/logout", Logout),
+        (r"/devices", Template),
+        (r"/rules", Template),
+        (r"/(.*)", tornado.web.StaticFileHandler, {"path": os.path.join(baseDir,'web')})
+        ]
+    
+    application = tornado.web.Application(
+        handlers,
+        login_url = "/login",
+        cookie_secret =  cookieSecret
+        )
 
     application.controller = controller
     application.baseDir = baseDir
     callback = tornado.ioloop.PeriodicCallback(controller.Update, 500)
     callback.start()
 
-    application.listen(8888,'0.0.0.0')
+    application.listen(80, '0.0.0.0')
     tornado.ioloop.IOLoop.instance().start()
 

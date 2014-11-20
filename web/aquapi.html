@@ -14,6 +14,12 @@
 <script type="text/javascript">
 "use strict";
 
+function loadLogin() {
+    var container = $('.centeredContent');
+    $('<form method="post">Password: <input type="password" name="pwd"/>' +
+      '<input type="submit" value="Submit"/></form>').appendTo(container);
+}
+
 function loadDashboard() {
     aquapy.Bind('open', function() {
 	loadWidgetState();
@@ -38,8 +44,9 @@ $(document).ready(function () {
 	window.location = url;
     });
 
-    
-    aquapy.Connect("ws://" + window.location.hostname + ":" + window.location.port + "/socket");
+    if (location.pathname != '/login') {
+	aquapy.Connect("ws://" + window.location.hostname + ":" + window.location.port + "/socket");
+    }
     
     switch(location.pathname) {
     case '/':
@@ -47,6 +54,9 @@ $(document).ready(function () {
 	break;
     case '/devices':
 	loadDevices();
+	break;
+    case '/login':
+	loadLogin();
 	break;
     }
     $("[url='" + location.pathname + "']").addClass('activeHeaderItem');

@@ -18,22 +18,24 @@ class Controller(object) :
         self.devices = {
             'Temperature': Device.Temperature(),
             'RelayBox': Device.RelayBox(),
-            'IO': Device.IOExpansion(),
-            'Alternating': Device.AlternatingDevice(),
-            'Virtual': Device.VirtualDevice()
+            'IO': Device.IOExpansion()
             }
 
         for device in self.devices.values() :
             device.Init()
 
         lightTimer = Rule.LightTimer(self)
-        toggleButton = Rule.ToggleButtonRule(self)
+        lightTimer.outputConnections['out'] = ('RelayBox','SumpLight')
 
-        lightTimer.outputConnections['out'] = ('RelayBox','Outlet0')
-        toggleButton.outputConnections['out'] = ('RelayBox','Outlet0')
-        toggleButton.inputConnections['in'] = ('IO','Input0')
+        ato = Rule.ATO(self)
+        ato.outputConnections['pump'] = ('RelayBox','TopOff')
+        ato.inputConnections['level'] = ('IO', 'Input0')
 
-        self.rules = [lightTimer, toggleButton]
+        thermostat = Rule.Thermostat(self)
+        thermostat.inputConnections['Temperature'] = ('Temperature', 'Temperature')
+        thermostat.outputConnections['Heater'] = ('RelayBox', 'Heater')
+
+        self.rules = [lightTimer, ato, thermostat]
 
         for rule in self.rules :
             rule.Init()

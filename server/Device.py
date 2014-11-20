@@ -108,16 +108,27 @@ class RelayBox(Device) :
         import smbus
         self._bus = smbus.SMBus(0)
 
+        self._names = [
+            'Heater',
+            'Return',
+            'Carbon',
+            'Skimmer',
+            'Unused',
+            'BioPellet',
+            'SumpLight',
+            'TopOff']
+        defaultsOff = ['SumpLight', 'TopOff']
+        
         self.CreateVariable('Address', self.Option, self.Int, 0x38)
-
-        for i in range(8) :
-            self.CreateVariable('Outlet%d' % i, self.Output, self.Bool, False)
+        
+        for name in self._names :
+            self.CreateVariable(name, self.Output, self.Bool, name not in defaultsOff)
 
     def Update(self) :
         # Create an 8-bit value
         byte = 0
         for i in range(8) :
-            outputName = 'Outlet%d' % i
+            outputName = self._names[i]
             if (not self.Get(outputName)) :
                 byte = byte | (1 << i)
                 

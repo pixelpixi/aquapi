@@ -59,10 +59,10 @@ class Thermostat(Rule) :
         return ['Heater', 'Chiller']
 
     def GetDefaultOptions(self) :
-        return {'MinTemperature': 74,
-                'MaxTemperature': 80}
+        return {'MinTemp': 74,
+                'MaxTemp': 80}
 
-    def Update(self) :
+    def Run(self) :
         temp = self.GetInput('Temperature')
 
         minTemp = self.GetOption('MinTemp')
@@ -71,34 +71,60 @@ class Thermostat(Rule) :
         self.SetOutput('Heater', temp < minTemp)
         self.SetOutput('Chiller', temp > maxTemp)
 
+class ATO(Rule) :
+    def Init(self) :
+        pass
+
+    def GetOutputNames(self) :
+        return ['pump']
+
+    def GetInputNames(self) :
+        return ['level']
+
+    def Run(self) :
+        # Limit ATO to 15 minutes twice a day
+        now = datetime.datetime.now()
+        if ((now.hour != 8 and now.hour != 20) or
+            now.minute > 15) :
+            self.SetOutput('pump', False)
+            return
+
+        self.SetOutput('pump', self.GetInput('level'))
+    
+
 class LightTimer(Rule) :
     
     def Init(self) :
-        self.lastUpdateTime = datetime.time()
+        self.lastUpdate = datetime.datetime.now()-datetime.timedelta(days=1)
 
     def GetOutputNames(self) :
         return ['out']
 
     def GetDefaultOptions(self) :
-        return {'OnTime': datetime.time(21,49,30),
-                'OffTime': datetime.time(23)}
+        return {'OnTime': datetime.time(18,00,00),
+                'OffTime': datetime.time(0,00,00)}
     
     def Run(self) :
-        now = datetime.datetime.now().time()
+        now = datetime.datetime.now()
 
-        keys = ['OnTime','OffTime']
+        keys = ['OnTime', 'OffTime']
         values = {'OnTime': True, 'OffTime': False}
         
         # Sort the keys by time
         orderedKeys = sorted(keys, key=lambda x: self.GetOption(x))
 
-        for key in orderedKeys :
-            t = self.GetOption(key)
-        
-            if (self.lastUpdateTime < t and now >= t) :
-                self.SetOutput('out', values[key])
+        newValue = None
+        for dayOffset in [-1, 0] :
+            for key in orderedKeys :
+                t = datetime.datetime.combine(now.date(), self.GetOption(key))
+                t = t+datetime.timedelta(days=dayOffset)
+                if (self.lastUpdate < t and now >= t) :
+                    newValue = values[key]
+                    self.lastUpdate = t
 
-        self.lastUpdateTime = now
+        self.lastUpdate = now
+        if (newValue is not None) :
+            self.SetOutput('out', newValue)
 
 class ToggleButtonRule(Rule) :
 
