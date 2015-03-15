@@ -1,4 +1,4 @@
-import datetime
+import datetime, time
 
 class Rule(object) :
 
@@ -73,7 +73,13 @@ class Thermostat(Rule) :
 
 class ATO(Rule) :
     def Init(self) :
-        pass
+        self._switchWasOn = False
+        self._pumpStartTime = 0
+        self._pumpTotalTime = 0
+        self._periodDuration = 60*60 # 1 hour
+        self._periodStart = time.time()
+        self._maxTimePerPeriod = 60*2 # 2 minutes
+        self._maxTimeExceeded = False
 
     def GetOutputNames(self) :
         return ['pump']
@@ -82,14 +88,53 @@ class ATO(Rule) :
         return ['level']
 
     def Run(self) :
-        # Limit ATO to 15 minutes twice a day
-        now = datetime.datetime.now()
-        if ((now.hour != 8 and now.hour != 20) or
-            now.minute > 15) :
-            self.SetOutput('pump', False)
-            return
+        # Calculate the total time that the pump has been running this period
+        totalTime = self._pumpTotalTime
+        if (self._pumpStartTime != 0) :
+            totalTime += time.time()-self._pumpStartTime
 
-        self.SetOutput('pump', self.GetInput('level'))
+        # If the time limit has been exceeded (and was not already exceeded),
+        # turn the pump off
+        if totalTime > self._maxTimePerPeriod and not self._maxTimeExceeded :
+            print 'ATO Max Exceeded. Turning off', datetime.datetime.now()
+            self._maxTimeExceeded = True
+            self.SetOutput('pump', False)
+
+        # If the switch went from off to on, and we haven't exceeded the time
+        # limit, turn the pump on
+        switchIsOn = self.GetInput('level')
+        if (switchIsOn and not self._switchWasOn) :
+            if (totalTime < self._maxTimePerPeriod) :
+                print 'Turning ATO Pump on', datetime.datetime.now()
+                self.SetOutput('pump', True)
+            else :
+                print 'Not turning ATO pump on. Already ran for %d seconds this period' % totalTime
+
+        # If the switch went from on to off, turn the pump off
+        if (self._switchWasOn and not switchIsOn) :
+            print 'Turning ATO Pump off', datetime.datetime.now()
+            self.SetOutput('pump', False)
+        self._switchWasOn = switchIsOn
+
+        # Save the start time when the pump turns on
+        if (self.GetOutput('pump') and self._pumpStartTime == 0) :
+            self._pumpStartTime = time.time()
+
+        # Clear the start time and add to the total when the pump turns off
+        if (not self.GetOutput('pump') and self._pumpStartTime != 0) :
+            self._pumpTotalTime += time.time()-self._pumpStartTime
+            self._pumpStartTime = 0
+
+        # When the period rolls over, clear the total time
+        if (time.time()//self._periodDuration) > (self._periodStart//self._periodDuration) :
+            # Reset _switchWasOn so the pump will start again if necessary
+            self._switchWasOn = False
+
+            self._periodStart = time.time()
+            self._pumpTotalTime = 0
+            self._maxTimeExceeded = False
+            if (self._pumpStartTime != 0) :
+                self._pumpStartTime = time.time()
     
 
 class LightTimer(Rule) :
